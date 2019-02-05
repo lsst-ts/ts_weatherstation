@@ -6,7 +6,7 @@ setting:
   default:
     type: 'lsst'
     configuration:
-      host: 'localhost'  # IP of the weather station
+      host: '10.0.2.15'  # IP of the weather station
       port: 50000
       buffer_size: 2048
       simulation: False

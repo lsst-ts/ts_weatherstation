@@ -52,7 +52,7 @@ class CSC(base_csc.BaseCsc):
         self.model.setup(id_data.data.settingsToApply)
         # self.evt_settingsApplied.set_put(selectedSettings=id_data.data.settingsToApply)
 
-    def end_enable(self, id_data):
+    async def do_enable(self, id_data):
         """End do_enable; called after state changes
         but before command acknowledged.
 
@@ -64,8 +64,9 @@ class CSC(base_csc.BaseCsc):
         id_data : `CommandIdData`
             Command ID and data
         """
+        self._do_change_state(id_data, "enable", [base_csc.State.DISABLED], base_csc.State.ENABLED)
 
-        asyncio.ensure_future(self.model.controller.start())
+        await self.model.controller.start()
         self.telemetry_loop_task = asyncio.ensure_future(self.telemetry_loop())
 
     def begin_disable(self, id_data):

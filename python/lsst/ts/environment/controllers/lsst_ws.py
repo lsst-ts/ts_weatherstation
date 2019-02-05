@@ -521,7 +521,7 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
         if not self.simulation:
             self.socket = socket.socket(socket.AF_INET,
                                         socket.SOCK_STREAM)
-            self.socket.bind()
+            self.socket.bind((self.host, self.port))
             self.socket.listen(1)
 
             self.conn, _ = self.socket.accept()
@@ -631,7 +631,8 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
 
         data = ""
         for i in range(self.buffer_size):
-            char = await self.reader.read(1).decode()
+            char = await self.reader.read(1)
+            char = char.decode()
             if not char:
                 break
             data = data + char
