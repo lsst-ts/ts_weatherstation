@@ -17,6 +17,7 @@ index_gen = salobj.index_generator()
 logger = logging.getLogger()
 logger.level = logging.DEBUG
 
+
 class Harness:
     def __init__(self, index):
         salobj.test_utils.set_random_lsst_dds_domain()
