@@ -1,5 +1,6 @@
 import asyncio
 import traceback
+import logging
 
 import SALPY_Environment
 
@@ -149,15 +150,19 @@ class CSC(base_csc.BaseCsc):
                     if telemetry is not None:
                         telemetry.set_put(**weather_data[topic_name])
             except ValueError as e:
-                error_topic = self.evt_errorCode.DataType()
-                error_topic.errorCode = TELEMETRY_LOOP_ERROR
-                error_topic.errorReport = 'Error in the telemetry loop coroutine.'
-                error_topic.traceback = traceback.format_exc()
-                self.evt_errorCode.put(error_topic)
-                self.log.exception(e)
-                self.log.error("Reconnecting to weather station server.")
+                # error_topic = self.evt_errorCode.DataType()
+                # error_topic.errorCode = TELEMETRY_LOOP_ERROR
+                # error_topic.errorReport = 'Error in the telemetry loop coroutine.'
+                # error_topic.traceback = traceback.format_exc()
+                # self.evt_errorCode.put(error_topic)
+                # self.log.exception(e)
+                # self.log.error("Reconnecting to weather station server.")
+                self.evt_logMessage.set_put(level=logging.ERROR,
+                                            message="Reconnecting to weather station server.",
+                                            traceback=traceback.format_exc())
                 await self.model.controller.stop()
                 await self.model.controller.start()
+                pass
             except Exception as e:
                 # If there is an exception go to FAULT state, log the exception and break the loop
                 error_topic = self.evt_errorCode.DataType()
