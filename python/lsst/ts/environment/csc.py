@@ -145,6 +145,8 @@ class CSC(base_csc.BaseCsc):
         while self.telemetry_loop_running:
             try:
                 weather_data = await self.model.get_evironment_data()
+                self.evt_logMessage.set_put(level=logging.DEBUG,
+                                            message=f"Got {weather_data}")
                 for topic_name in weather_data:
                     telemetry = getattr(self, f'tel_{topic_name}', None)
                     if telemetry is not None:
@@ -162,7 +164,13 @@ class CSC(base_csc.BaseCsc):
                                             traceback=traceback.format_exc())
                 await self.model.controller.stop()
                 await asyncio.sleep(300)
+                self.evt_logMessage.set_put(level=logging.INFO,
+                                            message="Reconnecting...",
+                                            traceback=traceback.format_exc())
                 await self.model.controller.start()
+                self.evt_logMessage.set_put(level=logging.INFO,
+                                            message="Reconnected...",
+                                            traceback=traceback.format_exc())
                 pass
             except Exception as e:
                 # If there is an exception go to FAULT state, log the exception and break the loop
@@ -174,6 +182,10 @@ class CSC(base_csc.BaseCsc):
                 self.log.exception(e)
                 self.fault()
                 break
+
+        self.evt_logMessage.set_put(level=logging.INFO,
+                                    message="Telemetry loop dying.",
+                                    traceback=traceback.format_exc())
 
     async def wait_loop(self, loop):
         """A utility method to wait for a task to die or cancel it and handle
