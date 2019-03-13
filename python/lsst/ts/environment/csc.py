@@ -158,9 +158,10 @@ class CSC(base_csc.BaseCsc):
                 # self.log.exception(e)
                 # self.log.error("Reconnecting to weather station server.")
                 self.evt_logMessage.set_put(level=logging.ERROR,
-                                            message="Reconnecting to weather station server.",
+                                            message="Waiting 5 min and reconnecting to weather station server.",
                                             traceback=traceback.format_exc())
                 await self.model.controller.stop()
+                await asyncio.sleep(300)
                 await self.model.controller.start()
                 pass
             except Exception as e:
