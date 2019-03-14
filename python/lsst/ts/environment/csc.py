@@ -144,6 +144,8 @@ class CSC(base_csc.BaseCsc):
 
         while self.telemetry_loop_running:
             try:
+                self.evt_logMessage.set_put(level=logging.DEBUG,
+                                            message=f"Getting data...")
                 weather_data = await self.model.get_evironment_data()
                 self.evt_logMessage.set_put(level=logging.DEBUG,
                                             message=f"Got {weather_data}")

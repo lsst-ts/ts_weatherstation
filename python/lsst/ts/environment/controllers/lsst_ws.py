@@ -83,6 +83,8 @@ class LSSTWeatherStation(BaseEnv):
         self.conn = None
         self.reader = None
 
+        self.read_timeout = 120
+
         # Example of the data output
         self.data_str = """SMS 0(S:AWS310_LSST;
 D:190204;
@@ -631,7 +633,7 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
 
         data = ""
         for i in range(self.buffer_size):
-            char = await self.reader.read(1)
+            char = await self.reader.read(1, timeout=self.read_timeout)
             char = char.decode()
             if not char:
                 break
