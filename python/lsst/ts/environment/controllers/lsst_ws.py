@@ -3,7 +3,6 @@ import asyncio
 import warnings
 import numpy as np
 import socket
-import logging
 
 from astropy.io import ascii
 
@@ -34,7 +33,7 @@ def fix_data(val):
     try:
         return float(new_val[:last_valid])
     except ValueError:
-        raise ValueError(f"Could not convert {val} to float")
+        return -99.
 
 
 async def get_last_item(idict, items):
@@ -642,10 +641,6 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
                 break
             elif char == ';':
                 data = data + '\n'
-        with open("lsst_ws.log", "a+") as fp:
-            fp.write("\n================================================\n")
-            fp.write(data)
-            fp.write("\n================================================\n")
         return data
 
     async def get_data(self):
