@@ -162,15 +162,15 @@ class CSC(base_csc.BaseCsc):
                 self.evt_logMessage.set_put(level=logging.ERROR,
                                             message="Waiting 5 min and reconnecting to weather station server.",
                                             traceback=traceback.format_exc())
-                await self.model.controller.stop()
+                self.model.controller.stop()
                 await asyncio.sleep(300)
-                self.evt_logMessage.set_put(level=logging.INFO,
+                self.evt_logMessage.set_put(level=logging.DEBUG,
                                             message="Reconnecting...",
-                                            traceback=traceback.format_exc())
+                                            traceback="")
                 await self.model.controller.start()
-                self.evt_logMessage.set_put(level=logging.INFO,
+                self.evt_logMessage.set_put(level=logging.DEBUG,
                                             message="Reconnected...",
-                                            traceback=traceback.format_exc())
+                                            traceback="")
                 pass
             except Exception as e:
                 # If there is an exception go to FAULT state, log the exception and break the loop
