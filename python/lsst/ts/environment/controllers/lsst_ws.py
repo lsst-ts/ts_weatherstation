@@ -85,8 +85,6 @@ class LSSTWeatherStation(BaseEnv):
         self.conn = None
         self.reader = None
 
-        self.log = logging.getLogger(__name__)
-
         # Example of the data output
         self.data_str = """SMS 0(S:AWS310_LSST;
 D:190204;
@@ -530,11 +528,6 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
 
             self.conn, _ = self.socket.accept()
             self.reader, _ = await asyncio.open_connection(sock=self.conn)
-            
-            log_file = logging.FileHandler("lsst_ws.log")
-            log_file.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s"))
-            log_file.setLevel(logging.DEBUG)
-            self.log.addHandler(log_file)
 
     def stop(self):
         """Stop Weather Station."""
@@ -649,7 +642,10 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
                 break
             elif char == ';':
                 data = data + '\n'
-        self.log.debug(data)
+        with open("lsst_ws.log", "a+") as fp:
+            fp.write("\n================================================\n")
+            fp.write(data)
+            fp.write("\n================================================\n")
         return data
 
     async def get_data(self):
