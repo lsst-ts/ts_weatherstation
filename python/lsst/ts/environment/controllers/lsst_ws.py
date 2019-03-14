@@ -3,6 +3,8 @@ import asyncio
 import warnings
 import numpy as np
 import socket
+import logging
+
 from astropy.io import ascii
 
 from .base_env import BaseEnv
@@ -83,7 +85,12 @@ class LSSTWeatherStation(BaseEnv):
         self.conn = None
         self.reader = None
 
-        self.read_timeout = 120
+        self.log = logging.getLogger(__name__)
+
+        log_file = logging.FileHandler("lsst_ws.log")
+        log_file.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s"))
+        log_file.setLevel(logging.DEBUG)
+        self.log.addHandler(log_file)
 
         # Example of the data output
         self.data_str = """SMS 0(S:AWS310_LSST;
@@ -633,7 +640,7 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
 
         data = ""
         for i in range(self.buffer_size):
-            char = await self.reader.read(1, timeout=self.read_timeout)
+            char = await self.reader.read(1)
             char = char.decode()
             if not char:
                 break
@@ -642,6 +649,7 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
                 break
             elif char == ';':
                 data = data + '\n'
+        self.log.debug(data)
         return data
 
     async def get_data(self):

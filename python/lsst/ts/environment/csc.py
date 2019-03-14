@@ -159,20 +159,20 @@ class CSC(base_csc.BaseCsc):
                 # error_topic.errorReport = 'Error in the telemetry loop coroutine.'
                 # error_topic.traceback = traceback.format_exc()
                 # self.evt_errorCode.put(error_topic)
-                # self.log.exception(e)
+                self.log.exception(e)
                 # self.log.error("Reconnecting to weather station server.")
-                self.evt_logMessage.set_put(level=logging.ERROR,
-                                            message="Waiting 5 min and reconnecting to weather station server.",
-                                            traceback=traceback.format_exc())
-                self.model.controller.stop()
-                await asyncio.sleep(300)
-                self.evt_logMessage.set_put(level=logging.DEBUG,
-                                            message="Reconnecting...",
-                                            traceback="")
-                await self.model.controller.start()
-                self.evt_logMessage.set_put(level=logging.DEBUG,
-                                            message="Reconnected...",
-                                            traceback="")
+                # self.evt_logMessage.set_put(level=logging.ERROR,
+                #                             message="Waiting 5 min and reconnecting to weather station server.",
+                #                             traceback=traceback.format_exc())
+                # self.model.controller.stop()
+                # await asyncio.sleep(300)
+                # self.evt_logMessage.set_put(level=logging.DEBUG,
+                #                             message="Reconnecting...",
+                #                             traceback="")
+                # await self.model.controller.start()
+                # self.evt_logMessage.set_put(level=logging.DEBUG,
+                #                             message="Reconnected...",
+                #                             traceback="")
                 pass
             except Exception as e:
                 # If there is an exception go to FAULT state, log the exception and break the loop
