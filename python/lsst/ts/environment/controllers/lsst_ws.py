@@ -3,6 +3,7 @@ import asyncio
 import warnings
 import numpy as np
 import socket
+
 from astropy.io import ascii
 
 from .base_env import BaseEnv
@@ -32,7 +33,7 @@ def fix_data(val):
     try:
         return float(new_val[:last_valid])
     except ValueError:
-        raise ValueError(f"Could not convert {val} to float")
+        return -99.
 
 
 async def get_last_item(idict, items):

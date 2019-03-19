@@ -1,5 +1,6 @@
 import asyncio
 import traceback
+import logging
 
 import SALPY_Environment
 
@@ -10,16 +11,31 @@ from .model import Model
 __all__ = ['CSC']
 
 
-TELEMETRY_LOOP_ERROR = 300
+TELEMETRY_LOOP_ERROR = 7801
 """Error in the telemetry loop (`int`).
 
-This error code is published in `SALPY_Environment.Environment_logevent_errorCodeC` if there is
-an error in the telemetry loop.
+This error code is published in 
+`SALPY_Environment.Environment_logevent_errorCodeC` if there is an error in 
+the telemetry loop.
+"""
+CONTROLLER_START_ERROR = 7802
+"""Error starting the model controller (`int`)
+
+this error code is published in 
+`SALPY_Environment.Environment_logevent_errorCodeC` if there is an error 
+calling `self.model.controller.start()`.
+"""
+CONTROLLER_STOP_ERROR = 7803
+"""Error stopping the model controller (`int`)
+
+this error code is published in 
+`SALPY_Environment.Environment_logevent_errorCodeC` if there is an error 
+calling `self.model.controller.stop()`.
 """
 
-
 class CSC(base_csc.BaseCsc):
-    """Commandable SAL Component (CSC) for the Environment monitoring system (a.k.a. Weather Station).
+    """Commandable SAL Component (CSC) for the Environment monitoring system
+    (a.k.a. Weather Station).
     """
 
     def __init__(self, index):
@@ -56,7 +72,8 @@ class CSC(base_csc.BaseCsc):
         """End do_enable; called after state changes
         but before command acknowledged.
 
-        This method will call `start` on the model controller and start the telemetry
+        This method will call `start` on the model controller and start the
+        telemetry
         loop.
 
         Parameters
@@ -66,7 +83,15 @@ class CSC(base_csc.BaseCsc):
         """
         self._do_change_state(id_data, "enable", [base_csc.State.DISABLED], base_csc.State.ENABLED)
 
-        await self.model.controller.start()
+        try:
+            await self.model.controller.start()
+        except Exception as e:
+            self.evt_errorCode.set_put(errorCode=CONTROLLER_START_ERROR,
+                                       errorReport='Error starting model controller.',
+                                       traceback=traceback.format_exc())
+            self.log.exception(e)
+            self.fault()
+            raise
         self.telemetry_loop_task = asyncio.ensure_future(self.telemetry_loop())
 
     def begin_disable(self, id_data):
@@ -82,7 +107,15 @@ class CSC(base_csc.BaseCsc):
 
         """
         self.telemetry_loop_running = False
-        self.model.controller.stop()
+        try:
+            self.model.controller.stop()
+        except Exception as e:
+            self.evt_errorCode.set_put(errorCode=CONTROLLER_STOP_ERROR,
+                                       errorReport='Error starting model controller.',
+                                       traceback=traceback.format_exc())
+            self.log.exception(e)
+            self.fault()
+            raise
 
     async def do_disable(self, id_data):
         """Transition to from `State.ENABLED` to `State.DISABLED`.
@@ -100,7 +133,8 @@ class CSC(base_csc.BaseCsc):
         await self.wait_loop(self.telemetry_loop_task)
 
     async def telemetry_loop(self):
-        """Telemetry loop coroutine. This method should only be running if the component is enabled. It will get
+        """Telemetry loop coroutine. This method should only be running if the
+        component is enabled. It will get
         the weather data from the controller and publish it to SAL.
 
         """
@@ -110,7 +144,11 @@ class CSC(base_csc.BaseCsc):
 
         while self.telemetry_loop_running:
             try:
+                self.evt_logMessage.set_put(level=logging.DEBUG,
+                                            message=f"Getting data...")
                 weather_data = await self.model.get_evironment_data()
+                self.evt_logMessage.set_put(level=logging.DEBUG,
+                                            message=f"Got {weather_data}")
                 for topic_name in weather_data:
                     telemetry = getattr(self, f'tel_{topic_name}', None)
                     if telemetry is not None:
@@ -123,11 +161,17 @@ class CSC(base_csc.BaseCsc):
                 error_topic.traceback = traceback.format_exc()
                 self.evt_errorCode.put(error_topic)
                 self.log.exception(e)
-                self.summary_state = base_csc.State.FAULT
+                self.fault()
+                self.model.controller.stop()
                 break
 
+        self.evt_logMessage.set_put(level=logging.INFO,
+                                    message="Telemetry loop dying.",
+                                    traceback=traceback.format_exc())
+
     async def wait_loop(self, loop):
-        """A utility method to wait for a task to die or cancel it and handle the aftermath.
+        """A utility method to wait for a task to die or cancel it and handle
+        the aftermath.
 
         Parameters
         ----------
