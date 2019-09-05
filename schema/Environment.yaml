@@ -1,6 +1,11 @@
-settingVersions:
-  recommendedSettingsVersion: 'default'
-  recommendedSettingsLabels: ['default', 'simulation']
+title: Environment v1
+description: Schema for Environment configuration files
+type: object
+properties:
+  settingVersions:
+    recommendedSettingsVersion: 'default'
+    recommendedSettingsLabels: ['default', 'simulation']
+settingsToApply:
 setting:
   default:
     type: 'lsst'
