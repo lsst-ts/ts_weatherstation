@@ -612,11 +612,14 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
                     try:
                         data = await get_last_item(self.data_structure,
                                                    self.data_mapping[topic][data_list])
-                        data = [fix_data(d) for d in data.values()]
+                        data = np.array([fix_data(d) for d in data.values()])
+                        data = data[data != -99.]
                         if len(data) > 1:
                             topic_dict[topic][data_list] = np.mean(data)
-                        else:
+                        elif len(data) == 1:
                             topic_dict[topic][data_list] = data[0]
+                        else:
+                            topic_dict[topic][data_list] = -99.
                     except KeyError:
                         raise KeyError(f'{topic},{data_list}: {self.data_mapping[topic][data_list]}')
         return topic_dict

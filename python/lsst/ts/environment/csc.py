@@ -14,24 +14,25 @@ __all__ = ['CSC']
 TELEMETRY_LOOP_ERROR = 7801
 """Error in the telemetry loop (`int`).
 
-This error code is published in 
-`SALPY_Environment.Environment_logevent_errorCodeC` if there is an error in 
+This error code is published in
+`SALPY_Environment.Environment_logevent_errorCodeC` if there is an error in
 the telemetry loop.
 """
 CONTROLLER_START_ERROR = 7802
 """Error starting the model controller (`int`)
 
-this error code is published in 
-`SALPY_Environment.Environment_logevent_errorCodeC` if there is an error 
+this error code is published in
+`SALPY_Environment.Environment_logevent_errorCodeC` if there is an error
 calling `self.model.controller.start()`.
 """
 CONTROLLER_STOP_ERROR = 7803
 """Error stopping the model controller (`int`)
 
-this error code is published in 
-`SALPY_Environment.Environment_logevent_errorCodeC` if there is an error 
+this error code is published in
+`SALPY_Environment.Environment_logevent_errorCodeC` if there is an error
 calling `self.model.controller.stop()`.
 """
+
 
 class CSC(base_csc.BaseCsc):
     """Commandable SAL Component (CSC) for the Environment monitoring system
@@ -55,7 +56,7 @@ class CSC(base_csc.BaseCsc):
         self.telemetry_loop_running = False
         self.telemetry_loop_task = None
 
-    def begin_start(self, id_data):
+    async def begin_start(self, id_data):
         """Begin do_start; called before state changes.
 
         This method call setup on the model, passing the selected setting.
@@ -68,7 +69,7 @@ class CSC(base_csc.BaseCsc):
         self.model.setup(id_data.data.settingsToApply)
         # self.evt_settingsApplied.set_put(selectedSettings=id_data.data.settingsToApply)
 
-    async def do_enable(self, id_data):
+    async def end_enable(self, id_data):
         """End do_enable; called after state changes
         but before command acknowledged.
 
@@ -81,8 +82,6 @@ class CSC(base_csc.BaseCsc):
         id_data : `CommandIdData`
             Command ID and data
         """
-        self._do_change_state(id_data, "enable", [base_csc.State.DISABLED], base_csc.State.ENABLED)
-
         try:
             await self.model.controller.start()
         except Exception as e:
@@ -94,7 +93,7 @@ class CSC(base_csc.BaseCsc):
             raise
         self.telemetry_loop_task = asyncio.ensure_future(self.telemetry_loop())
 
-    def begin_disable(self, id_data):
+    async def begin_disable(self, id_data):
         """Begin do_disable; called before state changes.
 
         This method will try to gracefully stop the telemetry loop by setting
@@ -111,16 +110,13 @@ class CSC(base_csc.BaseCsc):
             self.model.controller.stop()
         except Exception as e:
             self.evt_errorCode.set_put(errorCode=CONTROLLER_STOP_ERROR,
-                                       errorReport='Error starting model controller.',
+                                       errorReport='Error stopping model controller.',
                                        traceback=traceback.format_exc())
             self.log.exception(e)
             self.fault()
-            raise
 
-    async def do_disable(self, id_data):
-        """Transition to from `State.ENABLED` to `State.DISABLED`.
-
-        After switching from enable to disable, wait for telemetry loop to
+    async def end_disable(self, id_data):
+        """ After switching from enable to disable, wait for telemetry loop to
         finish. If it takes longer then a timeout to finish, cancel the future.
 
         Parameters
@@ -128,8 +124,6 @@ class CSC(base_csc.BaseCsc):
         id_data : `CommandIdData`
             Command ID and data
         """
-        self._do_change_state(id_data, "disable", [base_csc.State.ENABLED], base_csc.State.DISABLED)
-
         await self.wait_loop(self.telemetry_loop_task)
 
     async def telemetry_loop(self):

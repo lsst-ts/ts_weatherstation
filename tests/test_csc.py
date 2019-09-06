@@ -26,7 +26,7 @@ class Harness:
         self.remote = salobj.Remote(SALPY_Environment, index)
 
 
-class TestDIMMCSC(unittest.TestCase):
+class TestEnvironmentCSC(unittest.TestCase):
 
     def test_standard_state_transitions(self):
         """Test standard CSC state transitions.
@@ -74,7 +74,7 @@ class TestDIMMCSC(unittest.TestCase):
                 with self.subTest(bad_command=bad_command):
                     cmd_attr = getattr(harness.remote, f"cmd_{bad_command}")
                     with self.assertRaises(salobj.AckError):
-                        id_ack = await cmd_attr.start(cmd_attr.DataType(), timeout=1.)
+                        id_ack = await cmd_attr.start(timeout=1.)
 
             # send start; new state is DISABLED
             cmd_attr = getattr(harness.remote, f"cmd_start")
@@ -93,12 +93,12 @@ class TestDIMMCSC(unittest.TestCase):
                 with self.subTest(bad_command=bad_command):
                     cmd_attr = getattr(harness.remote, f"cmd_{bad_command}")
                     with self.assertRaises(salobj.AckError):
-                        id_ack = await cmd_attr.start(cmd_attr.DataType(), timeout=1.)
+                        id_ack = await cmd_attr.start(timeout=1.)
 
             # send enable; new state is ENABLED
             cmd_attr = getattr(harness.remote, f"cmd_enable")
             state_coro = harness.remote.evt_summaryState.next(flush=True, timeout=1.)
-            id_ack = await cmd_attr.start(cmd_attr.DataType(), timeout=1.)
+            id_ack = await cmd_attr.start(timeout=1.)
             state = await state_coro
             self.assertEqual(id_ack.ack.ack, harness.remote.salinfo.lib.SAL__CMD_COMPLETE)
             self.assertEqual(id_ack.ack.error, 0)
@@ -111,12 +111,12 @@ class TestDIMMCSC(unittest.TestCase):
                 with self.subTest(bad_command=bad_command):
                     cmd_attr = getattr(harness.remote, f"cmd_{bad_command}")
                     with self.assertRaises(salobj.AckError):
-                        id_ack = await cmd_attr.start(cmd_attr.DataType(), timeout=1.)
+                        id_ack = await cmd_attr.start(timeout=1.)
 
             # send disable; new state is DISABLED
             cmd_attr = getattr(harness.remote, f"cmd_disable")
             # this CMD may take some time to complete
-            id_ack = await cmd_attr.start(cmd_attr.DataType(), timeout=30.)
+            id_ack = await cmd_attr.start(timeout=30.)
             self.assertEqual(id_ack.ack.ack, harness.remote.salinfo.lib.SAL__CMD_COMPLETE)
             self.assertEqual(id_ack.ack.error, 0)
             self.assertEqual(harness.csc.summary_state, salobj.State.DISABLED)
