@@ -52,3 +52,20 @@ class BaseEnv(abc.ABC):
             A dictionary with the same values of the dimmMeasurement topic SAL Event.
         """
         raise NotImplementedError()
+
+    @abc.abstractmethod
+    def error_report(self):
+        """Return error report from the controller.
+
+        Returns
+        -------
+        report : `str`
+            String with information about last error.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def reset_error(self):
+        """Reset error report.
+        """
+        raise NotImplementedError()
