@@ -646,13 +646,13 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
                         data = await get_last_item(self.data_structure,
                                                    self.data_mapping[topic][data_list])
                         data = np.array([fix_data(d) for d in data.values()])
-                        data = data[data != -99.]
+                        data = data[np.bitwise_not(np.isnan(data))]
                         if len(data) > 1:
                             topic_dict[topic][data_list] = np.mean(data)
                         elif len(data) == 1:
                             topic_dict[topic][data_list] = data[0]
                         else:
-                            topic_dict[topic][data_list] = -99.
+                            topic_dict[topic][data_list] = np.nan
                     except KeyError:
                         raise KeyError(f'{topic},{data_list}: {self.data_mapping[topic][data_list]}')
         return topic_dict
@@ -711,7 +711,12 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
             data = await asyncio.wait_for(self.read_data_from_socket(),
                                           timeout=self.timeout)
             self.last_error_message = ""
-            await self.parse_data(data)
+            try:
+                await self.parse_data(data)
+            except Exception:
+                self.last_error_message = f"Could not parse data string: " \
+                                          f"[START]\n{data}\n[END]"
+                return None
 
         return await self.get_topic_dict()
 

@@ -203,12 +203,16 @@ class CSC(ConfigurableCsc):
                 self.evt_logMessage.set_put(level=logging.DEBUG,
                                             message=f"Getting data...")
                 weather_data = await self.model.get_evironment_data()
-                self.evt_logMessage.set_put(level=logging.DEBUG,
-                                            message=f"Got {weather_data}")
-                for topic_name in weather_data:
-                    telemetry = getattr(self, f'tel_{topic_name}', None)
-                    if telemetry is not None:
-                        telemetry.set_put(**weather_data[topic_name])
+
+                if weather_data is None:
+                    self.log.warning("No data from controller.")
+                    self.log.error(f"{self.model.controller.error_report()!r}")
+                else:
+                    self.log.debug(f"Got {weather_data}")
+                    for topic_name in weather_data:
+                        telemetry = getattr(self, f'tel_{topic_name}', None)
+                        if telemetry is not None:
+                            telemetry.set_put(**weather_data[topic_name])
             except Exception as e:
                 # If there is an exception go to FAULT state, log the exception and break the loop
                 error_topic = self.evt_errorCode.DataType()
