@@ -33,7 +33,7 @@ def fix_data(val):
     try:
         return float(new_val[:last_valid])
     except ValueError:
-        return -99.
+        return np.nan
 
 
 async def get_last_item(idict, items):
@@ -78,11 +78,18 @@ class LSSTWeatherStation(BaseEnv):
         self.host = ""
         self.port = 0
         self.buffer_size = 0
+        self.timeout = 120.
+
         self.simulation = False
 
         self.socket = None
         self.conn = None
         self.reader = None
+
+        self.last_error_message = ""
+
+        self.stream_start = '('
+        self.stream_end = ')'
 
         # Example of the data output
         self.data_str = """SMS 0(S:AWS310_LSST;
@@ -493,24 +500,33 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
                                 },
         }
 
-    def setup(self, host, port, buffer_size, simulation=False):
+    def setup(self, config, simulation=False):
         """Base weather station setup method.
 
         When subclassing avoid using argv.
 
         Parameters
         ----------
-        host : str
-            IP or address of the host.
-        port : int
-        buffer_size : int
-        simulation : bool
-            Run in simulation mode (Default=False).
+        config : `Namespace`
+            Namespace with the configuration parameters. The namespace
+            should have the following properties.
+
+            config.host : `str`
+                IP or address of the host.
+            config.port : `int`
+                Port on the host controller
+            config.buffer_size : `int`
+                Published buffer size.
+            config.timeout : `float`
+                Timeout waiting for new data from the controller.
+        simulation : `bool`
+            Run in simulation mode (default=False).
 
         """
-        self.host = host
-        self.port = port
-        self.buffer_size = buffer_size
+        self.host = config.host
+        self.port = config.port
+        self.buffer_size = config.buffer_size
+        self.timeout = config.timeout
         self.simulation = simulation
 
     def unset(self):
@@ -531,8 +547,20 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
     def stop(self):
         """Stop Weather Station."""
         if self.conn is not None:
-            self.conn.close()
-            self.conn = None
+            try:
+                self.conn.close()
+            except Exception:
+                pass
+            finally:
+                self.conn = None
+
+        if self.socket is not None:
+            try:
+                self.socket.close()
+            except Exception:
+                pass
+            finally:
+                self.socket = None
 
     async def parse_data(self, data_str):
         """A utility method to get a data string from the weather station and parse its content into
@@ -550,7 +578,12 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
         # Read the header information, that contains date, time and other useful information.
         # header = ascii.read(data_str, data_start=1, data_end=8, delimiter=':')
         # Read the data into a table
-        data = ascii.read(data_str, data_start=9)
+        try:
+            data = ascii.read(data_str, data_start=9)
+        except Exception as e:
+            self.last_error_message = data_str
+            raise e
+
         await asyncio.sleep(0.)  # give control back to event loop
 
         for col1 in self.data_structure:
@@ -613,13 +646,13 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
                         data = await get_last_item(self.data_structure,
                                                    self.data_mapping[topic][data_list])
                         data = np.array([fix_data(d) for d in data.values()])
-                        data = data[data != -99.]
+                        data = data[np.bitwise_not(np.isnan(data))]
                         if len(data) > 1:
                             topic_dict[topic][data_list] = np.mean(data)
                         elif len(data) == 1:
                             topic_dict[topic][data_list] = data[0]
                         else:
-                            topic_dict[topic][data_list] = -99.
+                            topic_dict[topic][data_list] = np.nan
                     except KeyError:
                         raise KeyError(f'{topic},{data_list}: {self.data_mapping[topic][data_list]}')
         return topic_dict
@@ -634,16 +667,33 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
         """
 
         data = ""
-        for i in range(self.buffer_size):
+
+        stream_started = False
+
+        i = 0
+        while True:
+
             char = await self.reader.read(1)
             char = char.decode()
+            i += 1
+
             if not char:
                 break
-            data = data + char
-            if char == '\n':
+            elif char == self.stream_start:
+                stream_started = True
+                continue
+            elif char == self.stream_end:
+                # stream ended
                 break
-            elif char == ';':
-                data = data + '\n'
+            elif stream_started:
+                if char == '\n':
+                    continue
+                data += char
+                if char == ';':
+                    data += '\n'
+
+            self.last_error_message = data
+
         return data
 
     async def get_data(self):
@@ -658,7 +708,29 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
             # Running in simulation, use the internal data string
             await self.parse_data(self.data_str)
         else:
-            data = await self.read_data_from_socket()
-            await self.parse_data(data)
+            data = await asyncio.wait_for(self.read_data_from_socket(),
+                                          timeout=self.timeout)
+            self.last_error_message = ""
+            try:
+                await self.parse_data(data)
+            except Exception:
+                self.last_error_message = f"Could not parse data string: " \
+                                          f"[START]\n{data}\n[END]"
+                return None
 
         return await self.get_topic_dict()
+
+    def error_report(self):
+        """Return error report from the controller.
+
+        Returns
+        -------
+        report : `str`
+            String with information about last error.
+        """
+        return self.last_error_message
+
+    def reset_error(self):
+        """Reset error report.
+        """
+        self.last_error_message = ""
