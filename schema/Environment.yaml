@@ -1,0 +1,36 @@
+$schema: http://json-schema.org/draft-07/schema#
+$id: https://github.com/lsst-ts/ts_environment/blob/master/schema/Environment.yaml
+# title must end with one or more spaces followed by the schema version, which must begin with "v"
+title: Environment v1
+description: Schema for the Environment CSC configuration files
+type: object
+properties:
+  type:
+    description: Type of weather station controller.
+    type: string
+    enum:
+    - lsst
+    default: lsst
+allOf:
+# For each supported weather station controller add a new if/then case below.
+# Warning: set the default values for each case at the model level
+# (rather than deeper down on properties within camera),
+# so users can omit controller and still get proper defaults.
+- if:
+    properties:
+      type:
+        const: lsst
+  then:
+    properties:
+      host:
+        type: string
+        default: 'localhost'
+      port:
+        type: number
+        default: 50000
+      buffer_size:
+        type: number
+        default: 2048
+      timeout:
+        type: number
+        default: 120.

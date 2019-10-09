@@ -2,8 +2,6 @@
 __all__ = ['Model']
 
 
-import os
-import yaml
 import logging
 
 from lsst.ts.environment import controllers
@@ -19,11 +17,6 @@ class Model:
     def __init__(self):
 
         self.log = logging.getLogger(__name__)
-
-        self.config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config/config.yaml')
-
-        with open(self.config_path, 'r') as stream:
-            self.config = yaml.load(stream)
 
         # List of weather topics to publish
         self.weather_topics = ["weather",
@@ -41,65 +34,24 @@ class Model:
 
         self.controller = None
 
-    @property
-    def recommended_settings(self):
-        """Recommended settings property.
-
-        Returns
-        -------
-        recommended_settings : str
-            Recommended settings read from Model configuration file.
-        """
-        return 'default'  # FIXME: Read from config file
-
-    @property
-    def settings_labels(self):
-        """Recommended settings labels.
-
-        Returns
-        -------
-        recommended_settings_labels : str
-            Comma separated string with the valid setting labels read from Model configuration file.
-
-        """
-        valid_settings = ''
-
-        n_set = len(self.config['settingVersions']['recommendedSettingsLabels'])
-        for i, label in enumerate(self.config['settingVersions']['recommendedSettingsLabels']):
-            valid_settings += label
-            if i < n_set-1:
-                valid_settings += ','
-
-        return valid_settings
-
-    def setup(self, setting):
+    def setup(self, setting, simulation_mode):
         """Setup the model with the given setting.
 
         Parameters
         ----------
-        setting : str
-            A string with the selected setting label. Must match one on the configuration file.
-
-        Returns
-        -------
-
+        setting : `object`
+            The configuration as described by the schema at ``schema_path``,
+            as a struct-like object.
+        simulation_mode : `int`
+            Requested simulation mode; 0 for normal operation.
         """
 
-        if len(setting) == 0:
-            setting = self.config['settingVersions']['recommendedSettingsVersion']
-            self.log.debug('Received empty setting label. Using default: %s', setting)
-
-        if setting not in self.config['settingVersions']['recommendedSettingsLabels']:
-            raise RuntimeError('Setting %s not a valid label. Must be one of %s.',
-                               setting,
-                               self.settings_labels)
-
         if self.controller is not None:
-            self.log.debug('Controller already set. Unsetting.')
+            self.log.warning('Controller already set. Unsetting.')
             self.unset_controller()
 
-        self.controller = available_controllers[self.config['setting'][setting]['type']]()
-        self.controller.setup(**self.config['setting'][setting]['configuration'])
+        self.controller = available_controllers[setting.type]()
+        self.controller.setup(setting, simulation=simulation_mode)
 
     def unset_controller(self):
         """Unset controller. This will call unset method on controller and make controller = None.
