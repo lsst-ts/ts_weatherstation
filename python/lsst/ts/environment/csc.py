@@ -200,8 +200,7 @@ class CSC(ConfigurableCsc):
 
         while self.telemetry_loop_running:
             try:
-                self.evt_logMessage.set_put(level=logging.DEBUG,
-                                            message=f"Getting data...")
+                self.log.debug(f"Getting data...")
                 weather_data = await self.model.get_evironment_data()
 
                 if weather_data is None:
@@ -225,7 +224,7 @@ class CSC(ConfigurableCsc):
                 self.model.controller.stop()
                 break
 
-        self.evt_logMessage.set_put(level=logging.INFO,
+        self.evt_logMessage.set_put(level=logging.ERROR,
                                     message="Telemetry loop dying.",
                                     traceback=traceback.format_exc())
 
