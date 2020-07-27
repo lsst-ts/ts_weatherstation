@@ -83,7 +83,7 @@ class TestEnvironmentCSC(unittest.TestCase):
                             id_ack = await cmd_attr.start(timeout=BASE_TIMEOUT)
 
                 # send start; new state is DISABLED
-                cmd_attr = getattr(harness.remote, f"cmd_start")
+                cmd_attr = getattr(harness.remote, "cmd_start")
                 harness.remote.evt_summaryState.flush()
                 id_ack = await cmd_attr.start(timeout=120)  # this one can take longer to execute
                 state = await harness.remote.evt_summaryState.next(flush=False,
@@ -102,7 +102,7 @@ class TestEnvironmentCSC(unittest.TestCase):
                             id_ack = await cmd_attr.start(timeout=BASE_TIMEOUT)
 
                 # send enable; new state is ENABLED
-                cmd_attr = getattr(harness.remote, f"cmd_enable")
+                cmd_attr = getattr(harness.remote, "cmd_enable")
                 harness.remote.evt_summaryState.flush()
                 id_ack = await cmd_attr.start(timeout=BASE_TIMEOUT)
                 state = await harness.remote.evt_summaryState.next(flush=False,
@@ -121,7 +121,7 @@ class TestEnvironmentCSC(unittest.TestCase):
                             id_ack = await cmd_attr.start(timeout=BASE_TIMEOUT)
 
                 # send disable; new state is DISABLED
-                cmd_attr = getattr(harness.remote, f"cmd_disable")
+                cmd_attr = getattr(harness.remote, "cmd_disable")
                 # this CMD may take some time to complete
                 id_ack = await cmd_attr.start(timeout=30.)
                 self.assertEqual(id_ack.ack, salobj.SalRetCode.CMD_COMPLETE)
