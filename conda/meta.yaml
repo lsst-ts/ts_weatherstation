@@ -36,7 +36,7 @@ test:
         - ts-salobj
     source_files:
         - python
-        - bin
+        - bin.src
         - tests
         - schema
         - setup.cfg
