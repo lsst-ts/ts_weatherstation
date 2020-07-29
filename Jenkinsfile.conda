@@ -7,7 +7,7 @@ pipeline {
         }
     }
     environment {
-        package_name = ts_environment
+        package_name = "ts_environment"
         OSPL_HOME="/opt/OpenSpliceDDS/V6.9.0/HDE/x86_64.linux"
     }
     options {
