@@ -78,7 +78,7 @@ pipeline {
                         sh """
                         source /home/saluser/miniconda3/bin/activate
                         anaconda login --user ${anaconda_user} --password ${anaconda_pass}
-                        anaconda upload -u lsstts --force ~/miniconda3/conda-bld/linux-64/ts-${package_name}*.tar.bz2
+                        anaconda upload -u lsstts --force /home/saluser/miniconda3/conda-bld/linux-64/ts-${package_name}*.tar.bz2
                         """
                     }
                 }
