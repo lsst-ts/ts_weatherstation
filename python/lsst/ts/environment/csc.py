@@ -147,7 +147,7 @@ class CSC(ConfigurableCsc):
             self.log.exception(e)
 
         # Logging error report from the controller
-        self.log.error(f"Error report from controller: \n [START]"
+        self.log.error("Error report from controller: \n [START]"
                        f"{self.model.controller.error_report()!r} \n [END]")
         self.model.controller.reset_error()
 
@@ -200,7 +200,7 @@ class CSC(ConfigurableCsc):
 
         while self.telemetry_loop_running:
             try:
-                self.log.debug(f"Getting data...")
+                self.log.debug("Getting data...")
                 weather_data = await self.model.get_evironment_data()
 
                 if weather_data is None:
