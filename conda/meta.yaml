@@ -1,5 +1,4 @@
 {% set data= load_setup_py_data() %}
-{% set name= "ts-environment" %}
 package:
     name: {{ name }}
     version: {{ data.get('version') }}
@@ -34,9 +33,10 @@ test:
         - ts-dds
         - ts-idl
         - ts-salobj
+        - black == 19.10b0
     source_files:
         - python
-        - bin.src
+        - bin
         - tests
         - schema
         - setup.cfg
