@@ -1,139 +1,52 @@
-import sys
-import unittest
-import asyncio
-import numpy as np
+# This file is part of ts_environment.
+#
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+import asynctest
 import logging
 
 from lsst.ts import salobj
 
 from lsst.ts.environment import csc
 
-np.random.seed(50)
-
-BASE_TIMEOUT = 10.
-
-index_gen = salobj.index_generator()
-
 logger = logging.getLogger()
 logger.level = logging.DEBUG
 
 
-class Harness:
-    def __init__(self, index, config_dir, initial_simulation_mode):
-        salobj.test_utils.set_random_lsst_dds_domain()
-        self.csc = csc.CSC(index=index,
-                           config_dir=config_dir,
-                           initial_simulation_mode=initial_simulation_mode)
-        self.remote = salobj.Remote(self.csc.domain,
-                                    "Environment",
-                                    index)
+class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
+    def basic_make_csc(self, initial_state, config_dir, simulation_mode, **kwargs):
+        return csc.CSC(
+            initial_state=initial_state,
+            config_dir=config_dir,
+            simulation_mode=simulation_mode,
+        )
 
-    async def __aenter__(self):
-        await self.csc.start_task
-        await self.remote.start_task
-        return self
+    async def test_standard_state_transitions(self):
+        logging.info("test_standard_state_transitions")
+        async with self.make_csc(
+            initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1
+        ):
+            await self.check_standard_state_transitions(enabled_commands=(),)
 
-    async def __aexit__(self, *args):
-        await self.csc.close()
-
-
-class TestEnvironmentCSC(unittest.TestCase):
-
-    def test_standard_state_transitions(self):
-        """Test standard CSC state transitions.
-
-        The initial state is STANDBY.
-        The standard commands and associated state transitions are:
-
-        * enterControl: OFFLINE to STANDBY
-        * start: STANDBY to DISABLED
-        * enable: DISABLED to ENABLED
-
-        * disable: ENABLED to DISABLED
-        * standby: DISABLED to STANDBY
-        * exitControl: STANDBY, FAULT to OFFLINE (quit)
-        """
-
-        async def doit():
-
-            commands = ("start", "enable", "disable", "exitControl", "standby")
-            index = next(index_gen)
-            self.assertGreater(index, 0)
-
-            async with Harness(index, None, 1) as harness:
-
-                # Check initial state
-                current_state = await harness.remote.evt_summaryState.next(flush=False,
-                                                                           timeout=BASE_TIMEOUT)
-
-                self.assertEqual(harness.csc.summary_state, salobj.State.STANDBY)
-                self.assertEqual(current_state.summaryState, salobj.State.STANDBY)
-
-                # Check that settingVersions was published
-                setting_versions = await harness.remote.evt_settingVersions.next(flush=False,
-                                                                                 timeout=BASE_TIMEOUT)
-                self.assertIsNotNone(setting_versions)
-
-                for bad_command in commands:
-                    if bad_command in ("start", "exitControl"):
-                        continue  # valid command in STANDBY state
-                    with self.subTest(bad_command=bad_command):
-                        cmd_attr = getattr(harness.remote, f"cmd_{bad_command}")
-                        with self.assertRaises(salobj.AckError):
-                            id_ack = await cmd_attr.start(timeout=BASE_TIMEOUT)
-
-                # send start; new state is DISABLED
-                cmd_attr = getattr(harness.remote, "cmd_start")
-                harness.remote.evt_summaryState.flush()
-                id_ack = await cmd_attr.start(timeout=120)  # this one can take longer to execute
-                state = await harness.remote.evt_summaryState.next(flush=False,
-                                                                   timeout=BASE_TIMEOUT)
-                self.assertEqual(id_ack.ack, salobj.SalRetCode.CMD_COMPLETE)
-                self.assertEqual(id_ack.error, 0)
-                self.assertEqual(harness.csc.summary_state, salobj.State.DISABLED)
-                self.assertEqual(state.summaryState, salobj.State.DISABLED)
-
-                for bad_command in commands:
-                    if bad_command in ("enable", "standby"):
-                        continue  # valid command in DISABLED state
-                    with self.subTest(bad_command=bad_command):
-                        cmd_attr = getattr(harness.remote, f"cmd_{bad_command}")
-                        with self.assertRaises(salobj.AckError):
-                            id_ack = await cmd_attr.start(timeout=BASE_TIMEOUT)
-
-                # send enable; new state is ENABLED
-                cmd_attr = getattr(harness.remote, "cmd_enable")
-                harness.remote.evt_summaryState.flush()
-                id_ack = await cmd_attr.start(timeout=BASE_TIMEOUT)
-                state = await harness.remote.evt_summaryState.next(flush=False,
-                                                                   timeout=BASE_TIMEOUT)
-                self.assertEqual(id_ack.ack, salobj.SalRetCode.CMD_COMPLETE)
-                self.assertEqual(id_ack.error, 0)
-                self.assertEqual(harness.csc.summary_state, salobj.State.ENABLED)
-                self.assertEqual(state.summaryState, salobj.State.ENABLED)
-
-                for bad_command in commands:
-                    if bad_command == "disable":
-                        continue  # valid command in ENABLE state
-                    with self.subTest(bad_command=bad_command):
-                        cmd_attr = getattr(harness.remote, f"cmd_{bad_command}")
-                        with self.assertRaises(salobj.AckError):
-                            id_ack = await cmd_attr.start(timeout=BASE_TIMEOUT)
-
-                # send disable; new state is DISABLED
-                cmd_attr = getattr(harness.remote, "cmd_disable")
-                # this CMD may take some time to complete
-                id_ack = await cmd_attr.start(timeout=30.)
-                self.assertEqual(id_ack.ack, salobj.SalRetCode.CMD_COMPLETE)
-                self.assertEqual(id_ack.error, 0)
-                self.assertEqual(harness.csc.summary_state, salobj.State.DISABLED)
-
-        asyncio.get_event_loop().run_until_complete(doit())
-
-
-if __name__ == '__main__':
-
-    stream_handler = logging.StreamHandler(sys.stdout)
-    logger.addHandler(stream_handler)
-
-    unittest.main()
+    async def test_bin_script(self):
+        logging.info("test_bin_script")
+        await self.check_bin_script(
+            name="Environment", index=None, exe_name="environment_csc.py"
+        )
