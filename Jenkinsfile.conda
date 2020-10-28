@@ -1,4 +1,4 @@
-@Library('JenkinsShared') _
+@Library('JenkinsShared')
 import org.lsst.ts.jenkins.*
 Pipelines pipelines = new Pipelines()
 pipelines.condaPipeline("ts_config_ocs", "ts-environment", "lsst.ts.environment")
