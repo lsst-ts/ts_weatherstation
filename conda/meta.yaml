@@ -31,8 +31,8 @@ test:
         - boto3
         - moto
         - ts-dds
-        - ts-idl
-        - ts-salobj
+        - ts-idl {{ idl_version }}
+        - ts-salobj {{ salobj_version }}
         - black == 19.10b0
     source_files:
         - python
