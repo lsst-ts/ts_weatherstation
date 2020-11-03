@@ -1,3 +1,2 @@
 @Library('JenkinsShared')_
-CondaPipeline("ts_config_ocs", "ts-environment", "lsst.ts.environment")
-
+CondaPipeline("ts_config_ocs", "ts-weatherstation", "lsst.ts.weatherstation")

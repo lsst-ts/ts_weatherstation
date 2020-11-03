@@ -1,6 +1,6 @@
-# This file is part of ts_environment.
+# This file is part of ts_weatherstation.
 #
-# Developed for the LSST Data Management System.
+# Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
 # (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
@@ -24,13 +24,15 @@ __all__ = ["Model"]
 
 import logging
 
-from lsst.ts.environment import controllers
+from lsst.ts.weatherstation import controllers
 
 available_controllers = {"lsst": controllers.LSSTWeatherStation}
 
 
 class Model:
-    """An interface class for generic weather stations to connect to the Environment CSC."""
+    """An interface class for generic weather stations to connect to the
+    WeatherStation CSC.
+    """
 
     def __init__(self):
 
@@ -74,22 +76,19 @@ class Model:
         self.controller.setup(setting, simulation=simulation_mode)
 
     def unset_controller(self):
-        """Unset controller. This will call unset method on controller and make controller = None.
-
-        Returns
-        -------
-
+        """Unset controller. This will call unset method on controller and make
+        controller = None.
         """
         self.controller.unset()
         self.controller = None
 
-    async def get_evironment_data(self):
+    async def get_weatherstation_data(self):
         """A coroutine to get data from the controller.
 
         Returns
         -------
-        env_data: dict
-            A dictionary with the environment data.
+        weather_data: dict
+            A dictionary with the WeatherStation data.
 
         """
         return await self.controller.get_data()

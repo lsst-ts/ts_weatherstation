@@ -1,4 +1,4 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
 # Python-only package
-scripts.BasicSConstruct("ts_environment", disableCc=True)
+scripts.BasicSConstruct("ts_weatherstation", disableCc=True)
