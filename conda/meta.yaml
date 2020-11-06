@@ -1,6 +1,6 @@
 {% set data= load_setup_py_data() %}
 package:
-    name: {{ name }}
+    name: "ts-environment"
     version: {{ data.get('version') }}
 
 source:
@@ -31,8 +31,8 @@ test:
         - boto3
         - moto
         - ts-dds
-        - ts-idl
-        - ts-salobj
+        - ts-idl {{ idl_version }}
+        - ts-salobj {{ salobj_version }}
         - black == 19.10b0
     source_files:
         - python
