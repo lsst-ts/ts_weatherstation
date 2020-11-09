@@ -1,13 +1,34 @@
+# This file is part of ts_environment.
+#
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import asyncio
 import traceback
 import logging
 import pathlib
 
-from lsst.ts.salobj import (base_csc, ConfigurableCsc, State)
+from lsst.ts.salobj import base_csc, ConfigurableCsc, State
 
 from .model import Model
 
-__all__ = ['CSC']
+__all__ = ["CSC"]
 
 
 TELEMETRY_LOOP_ERROR = 7801
@@ -38,23 +59,34 @@ class CSC(ConfigurableCsc):
     (a.k.a. Weather Station).
     """
 
-    def __init__(self, index, config_dir=None,
-                 initial_state=State.STANDBY,
-                 initial_simulation_mode=0):
+    valid_simulation_modes = (0, 1)
+
+    def __init__(
+        self, config_dir=None, initial_state=State.STANDBY, simulation_mode=0,
+    ):
         """
         Initialize CSC.
         """
 
-        self.model = Model()  # instantiate the model so I can have the settings once the component is up
+        self.model = (
+            Model()
+        )  # instantiate the model so I can have the settings once the component is up
 
-        schema_path = pathlib.Path(__file__).resolve().parents[4].joinpath("schema",
-                                                                           "Environment.yaml")
+        schema_path = (
+            pathlib.Path(__file__)
+            .resolve()
+            .parents[4]
+            .joinpath("schema", "Environment.yaml")
+        )
 
-        super().__init__("Environment", index=index,
-                         schema_path=schema_path,
-                         config_dir=config_dir,
-                         initial_state=initial_state,
-                         initial_simulation_mode=initial_simulation_mode)
+        super().__init__(
+            "Environment",
+            index=0,
+            schema_path=schema_path,
+            config_dir=config_dir,
+            initial_state=initial_state,
+            simulation_mode=simulation_mode,
+        )
 
         self.loop_die_timeout = 5  # how long to wait for the loops to die?
 
@@ -77,9 +109,11 @@ class CSC(ConfigurableCsc):
         try:
             await self.model.controller.start()
         except Exception as e:
-            self.evt_errorCode.set_put(errorCode=CONTROLLER_START_ERROR,
-                                       errorReport='Error starting model controller.',
-                                       traceback=traceback.format_exc())
+            self.evt_errorCode.set_put(
+                errorCode=CONTROLLER_START_ERROR,
+                errorReport="Error starting model controller.",
+                traceback=traceback.format_exc(),
+            )
             self.log.exception(e)
             self.fault()
             raise
@@ -103,9 +137,11 @@ class CSC(ConfigurableCsc):
         try:
             self.model.controller.stop()
         except Exception as e:
-            self.evt_errorCode.set_put(errorCode=CONTROLLER_STOP_ERROR,
-                                       errorReport='Error stopping model controller.',
-                                       traceback=traceback.format_exc())
+            self.evt_errorCode.set_put(
+                errorCode=CONTROLLER_STOP_ERROR,
+                errorReport="Error stopping model controller.",
+                traceback=traceback.format_exc(),
+            )
             self.log.exception(e)
             self.fault()
 
@@ -124,7 +160,7 @@ class CSC(ConfigurableCsc):
 
         await super().end_disable(id_data)
 
-    def fault(self, code=None, report=""):
+    def fault(self, code=None, report="", trace_back=""):
         """Enter the fault state.
 
         Subclass parent method to disable corrections in the wait to FAULT
@@ -137,6 +173,8 @@ class CSC(ConfigurableCsc):
             is not output and you should output it yourself.
         report : `str` (optional)
             Description of the error.
+        trace_back : `str`, optional
+            Description of the traceback, if any.
         """
 
         # Stop the controller.
@@ -147,15 +185,17 @@ class CSC(ConfigurableCsc):
             self.log.exception(e)
 
         # Logging error report from the controller
-        self.log.error(f"Error report from controller: \n [START]"
-                       f"{self.model.controller.error_report()!r} \n [END]")
+        self.log.error(
+            "Error report from controller: \n [START]"
+            f"{self.model.controller.error_report()!r} \n [END]"
+        )
         self.model.controller.reset_error()
 
         super().fault(code=code, report=report)
 
     @staticmethod
     def get_config_pkg():
-        return 'ts_config_ocs'
+        return "ts_config_ocs"
 
     async def configure(self, config):
         """Configure the CSC.
@@ -171,22 +211,7 @@ class CSC(ConfigurableCsc):
         Called when running the ``start`` command, just before changing
         summary state from `State.STANDBY` to `State.DISABLED`.
         """
-        self.model.setup(config,
-                         simulation_mode=self.simulation_mode)
-
-    async def implement_simulation_mode(self, simulation_mode):
-        """Implement going into or out of simulation mode.
-
-        Parameters
-        ----------
-        simulation_mode : `int`
-            Requested simulation mode; 0 for normal operation.
-
-        """
-        if self.summary_state != State.STANDBY:
-            raise RuntimeError(f"CSC must be in {State.STANDBY!r} state to change simulation "
-                               f"mode. Current state is {self.state!r}. "
-                               f"Current simulation mode is {self.simulation_mode}.")
+        self.model.setup(config, simulation_mode=self.simulation_mode)
 
     async def telemetry_loop(self):
         """Telemetry loop coroutine. This method should only be running if the
@@ -195,12 +220,12 @@ class CSC(ConfigurableCsc):
 
         """
         if self.telemetry_loop_running:
-            raise RuntimeError('Telemetry loop still running...')
+            raise RuntimeError("Telemetry loop still running...")
         self.telemetry_loop_running = True
 
         while self.telemetry_loop_running:
             try:
-                self.log.debug(f"Getting data...")
+                self.log.debug("Getting data...")
                 weather_data = await self.model.get_evironment_data()
 
                 if weather_data is None:
@@ -209,14 +234,14 @@ class CSC(ConfigurableCsc):
                 else:
                     self.log.debug(f"Got {weather_data}")
                     for topic_name in weather_data:
-                        telemetry = getattr(self, f'tel_{topic_name}', None)
+                        telemetry = getattr(self, f"tel_{topic_name}", None)
                         if telemetry is not None:
                             telemetry.set_put(**weather_data[topic_name])
             except Exception as e:
                 # If there is an exception go to FAULT state, log the exception and break the loop
                 error_topic = self.evt_errorCode.DataType()
                 error_topic.errorCode = TELEMETRY_LOOP_ERROR
-                error_topic.errorReport = 'Error in the telemetry loop coroutine.'
+                error_topic.errorReport = "Error in the telemetry loop coroutine."
                 error_topic.traceback = traceback.format_exc()
                 self.evt_errorCode.put(error_topic)
                 self.log.exception(e)
@@ -224,9 +249,11 @@ class CSC(ConfigurableCsc):
                 self.model.controller.stop()
                 break
 
-        self.evt_logMessage.set_put(level=logging.ERROR,
-                                    message="Telemetry loop dying.",
-                                    traceback=traceback.format_exc())
+        self.evt_logMessage.set_put(
+            level=logging.ERROR,
+            message="Telemetry loop dying.",
+            traceback=traceback.format_exc(),
+        )
 
     async def wait_loop(self, loop):
         """A utility method to wait for a task to die or cancel it and handle
@@ -249,7 +276,7 @@ class CSC(ConfigurableCsc):
         try:
             await loop
         except asyncio.CancelledError:
-            self.log.info('Loop cancelled...')
+            self.log.info("Loop cancelled...")
         except Exception as e:
             # Something else may have happened. I still want to disable as this will stop the loop on the
             # target production
