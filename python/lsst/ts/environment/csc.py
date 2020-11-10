@@ -62,15 +62,13 @@ class CSC(ConfigurableCsc):
     valid_simulation_modes = (0, 1)
 
     def __init__(
-        self, config_dir=None, initial_state=State.STANDBY, simulation_mode=0,
+        self, index, config_dir=None, initial_state=State.STANDBY, simulation_mode=0,
     ):
         """
         Initialize CSC.
         """
 
-        self.model = (
-            Model()
-        )  # instantiate the model so I can have the settings once the component is up
+        self.model = Model()
 
         schema_path = (
             pathlib.Path(__file__)
@@ -81,7 +79,7 @@ class CSC(ConfigurableCsc):
 
         super().__init__(
             "Environment",
-            index=0,
+            index=index,
             schema_path=schema_path,
             config_dir=config_dir,
             initial_state=initial_state,

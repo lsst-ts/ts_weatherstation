@@ -4,4 +4,4 @@ import asyncio
 
 from lsst.ts.environment.csc import CSC
 
-asyncio.run(CSC.amain(index=None))
+asyncio.run(CSC.amain(index=True))

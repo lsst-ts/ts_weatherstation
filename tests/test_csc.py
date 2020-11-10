@@ -20,33 +20,30 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import asynctest
-import logging
 
 from lsst.ts import salobj
 
 from lsst.ts.environment import csc
 
-logger = logging.getLogger()
-logger.level = logging.DEBUG
+index_gen = salobj.index_generator()
 
 
 class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
     def basic_make_csc(self, initial_state, config_dir, simulation_mode, **kwargs):
         return csc.CSC(
+            index=next(index_gen),
             initial_state=initial_state,
             config_dir=config_dir,
             simulation_mode=simulation_mode,
         )
 
     async def test_standard_state_transitions(self):
-        logging.info("test_standard_state_transitions")
         async with self.make_csc(
             initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1
         ):
             await self.check_standard_state_transitions(enabled_commands=(),)
 
     async def test_bin_script(self):
-        logging.info("test_bin_script")
         await self.check_bin_script(
-            name="Environment", index=None, exe_name="environment_csc.py"
+            name="Environment", index=next(index_gen), exe_name="environment_csc.py"
         )
