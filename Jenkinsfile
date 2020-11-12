@@ -77,7 +77,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    docker exec -u saluser \${container_name} sh -c \"source ~/.setup.sh && setup ts_sal -t current && make_idl_files.py Environment\"
+                    docker exec -u saluser \${container_name} sh -c \"source ~/.setup.sh && setup ts_sal -t current && make_idl_files.py WeatherStation\"
                     """
                 }
             }
@@ -95,7 +95,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    docker exec -u saluser \${container_name} sh -c \"source ~/.setup.sh && cd repo && eups declare -r . -t saluser && setup ts_environment -t saluser && export LSST_DDS_IP=192.168.0.1 && pytest --color=no -ra --junitxml=tests/results/results.xml\"
+                    docker exec -u saluser \${container_name} sh -c \"source ~/.setup.sh && cd repo && eups declare -r . -t saluser && setup ts_weatherstation -t saluser && export LSST_DDS_IP=192.168.0.1 && pytest --color=no -ra --junitxml=tests/results/results.xml\"
                     """
                 }
             }

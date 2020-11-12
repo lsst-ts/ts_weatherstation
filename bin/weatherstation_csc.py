@@ -1,6 +1,8 @@
-# This file is part of ts_environment.
+#!/usr/bin/env python
 #
-# Developed for the LSST Data Management System.
+# This file is part of ts_weatherstation.
+#
+# Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
 # (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
@@ -19,13 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .csc import *
+import asyncio
 
-try:
-    from .version import *
-except ImportError:
-    __version__ = "?"
-    __repo_version__ = '?'
-    __fingerprint__ = '? *'
-    __dependency_versions__ = {
-    }
+from lsst.ts.weatherstation.csc import CSC
+
+asyncio.run(CSC.amain(index=True))
