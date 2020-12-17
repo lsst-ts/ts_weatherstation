@@ -91,13 +91,26 @@ class CSC(ConfigurableCsc):
         self.telemetry_loop_running = False
         self.telemetry_loop_task = None
 
+    async def begin_enable(self, id_data):
+        """Begin do_enable; called before state changes.
+
+        This method will send a CMD_INPROGRESS signal.
+
+        Parameters
+        ----------
+        id_data : `CommandIdData`
+            Command ID and data
+
+        """
+        await super().begin_enable(id_data)
+        self.cmd_enable.ack_in_progress(id_data, timeout=60)
+
     async def end_enable(self, id_data):
         """End do_enable; called after state changes
         but before command acknowledged.
 
         This method will call `start` on the model controller and start the
-        telemetry
-        loop.
+        telemetry loop.
 
         Parameters
         ----------
@@ -144,6 +157,7 @@ class CSC(ConfigurableCsc):
             self.fault()
 
         await super().begin_disable(id_data)
+        self.cmd_enable.ack_in_progress(id_data, timeout=60)
 
     async def end_disable(self, id_data):
         """ After switching from enable to disable, wait for telemetry loop to
