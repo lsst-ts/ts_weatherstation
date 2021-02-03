@@ -1,6 +1,6 @@
-# This file is part of ts_environment.
+# This file is part of ts_weatherstation.
 #
-# Developed for the LSST Data Management System.
+# Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
 # (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
@@ -35,28 +35,28 @@ TELEMETRY_LOOP_ERROR = 7801
 """Error in the telemetry loop (`int`).
 
 This error code is published in
-`Environment_logevent_errorCodeC` if there is an error in
+`WeatherStation_logevent_errorCodeC` if there is an error in
 the telemetry loop.
 """
 CONTROLLER_START_ERROR = 7802
 """Error starting the model controller (`int`)
 
 this error code is published in
-`Environment_logevent_errorCodeC` if there is an error
+`WeatherStation_logevent_errorCodeC` if there is an error
 calling `self.model.controller.start()`.
 """
 CONTROLLER_STOP_ERROR = 7803
 """Error stopping the model controller (`int`)
 
 this error code is published in
-`Environment_logevent_errorCodeC` if there is an error
+`WeatherStation_logevent_errorCodeC` if there is an error
 calling `self.model.controller.stop()`.
 """
 
 
 class CSC(ConfigurableCsc):
-    """Commandable SAL Component (CSC) for the Environment monitoring system
-    (a.k.a. Weather Station).
+    """Commandable SAL Component (CSC) for the WeatherStation monitoring
+    system.
     """
 
     valid_simulation_modes = (0, 1)
@@ -74,11 +74,11 @@ class CSC(ConfigurableCsc):
             pathlib.Path(__file__)
             .resolve()
             .parents[4]
-            .joinpath("schema", "Environment.yaml")
+            .joinpath("schema", "WeatherStation.yaml")
         )
 
         super().__init__(
-            "Environment",
+            "WeatherStation",
             index=index,
             schema_path=schema_path,
             config_dir=config_dir,
@@ -91,13 +91,26 @@ class CSC(ConfigurableCsc):
         self.telemetry_loop_running = False
         self.telemetry_loop_task = None
 
+    async def begin_enable(self, id_data):
+        """Begin do_enable; called before state changes.
+
+        This method will send a CMD_INPROGRESS signal.
+
+        Parameters
+        ----------
+        id_data : `CommandIdData`
+            Command ID and data
+
+        """
+        await super().begin_enable(id_data)
+        self.cmd_enable.ack_in_progress(id_data, timeout=60)
+
     async def end_enable(self, id_data):
         """End do_enable; called after state changes
         but before command acknowledged.
 
         This method will call `start` on the model controller and start the
-        telemetry
-        loop.
+        telemetry loop.
 
         Parameters
         ----------
@@ -144,6 +157,7 @@ class CSC(ConfigurableCsc):
             self.fault()
 
         await super().begin_disable(id_data)
+        self.cmd_enable.ack_in_progress(id_data, timeout=60)
 
     async def end_disable(self, id_data):
         """ After switching from enable to disable, wait for telemetry loop to
@@ -224,7 +238,7 @@ class CSC(ConfigurableCsc):
         while self.telemetry_loop_running:
             try:
                 self.log.debug("Getting data...")
-                weather_data = await self.model.get_evironment_data()
+                weather_data = await self.model.get_weatherstation_data()
 
                 if weather_data is None:
                     self.log.warning("No data from controller.")

@@ -1,8 +1,7 @@
 $schema: http://json-schema.org/draft-07/schema#
-$id: https://github.com/lsst-ts/ts_environment/blob/master/schema/Environment.yaml
-# title must end with one or more spaces followed by the schema version, which must begin with "v"
-title: Environment v1
-description: Schema for the Environment CSC configuration files
+$id: https://github.com/lsst-ts/ts_weatherstation/blob/master/schema/WeatherStation.yaml
+title: WeatherStation v1
+description: Schema for the WeatherStation CSC configuration files
 type: object
 properties:
   type:
