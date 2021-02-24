@@ -21,10 +21,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-try:
-    from .version import *
-except ModuleNotFoundError:
-    __version__ = "?"
+"""Sphinx configuration file for an LSST stack package.
 
-from .config_schema import CONFIG_SCHEMA
-from .csc import *
+This configuration only affects single-package Sphinx documentation builds.
+"""
+
+from documenteer.conf.pipelinespkg import *  # noqa
+import lsst.ts.weatherstation  # noqa
+
+project = "ts_weatherstation"
+html_theme_options["logotext"] = project  # noqa
+html_title = project
+html_short_title = project
+doxylink = {}  # Avoid warning: Could not find tag file _doxygen/doxygen.tag
