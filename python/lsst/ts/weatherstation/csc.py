@@ -1,6 +1,8 @@
+#!/usr/bin/env python
+#
 # This file is part of ts_weatherstation.
 #
-# Developed for the LSST Telescope and Site Systems.
+# Developed for the Vera Rubin Observatory Telescope and Site Systems.
 # This product includes software developed by the LSST Project
 # (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
@@ -22,8 +24,9 @@
 import asyncio
 import traceback
 import logging
-import pathlib
 
+from .config_schema import CONFIG_SCHEMA
+from . import __version__
 from lsst.ts.salobj import base_csc, ConfigurableCsc, State
 
 from .model import Model
@@ -60,6 +63,7 @@ class CSC(ConfigurableCsc):
     """
 
     valid_simulation_modes = (0, 1)
+    version = __version__
 
     def __init__(
         self, index, config_dir=None, initial_state=State.STANDBY, simulation_mode=0,
@@ -70,17 +74,10 @@ class CSC(ConfigurableCsc):
 
         self.model = Model()
 
-        schema_path = (
-            pathlib.Path(__file__)
-            .resolve()
-            .parents[4]
-            .joinpath("schema", "WeatherStation.yaml")
-        )
-
         super().__init__(
             "WeatherStation",
             index=index,
-            schema_path=schema_path,
+            config_schema=CONFIG_SCHEMA,
             config_dir=config_dir,
             initial_state=initial_state,
             simulation_mode=simulation_mode,
