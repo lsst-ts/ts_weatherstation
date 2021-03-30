@@ -573,6 +573,5 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
         return self.last_error_message
 
     def reset_error(self):
-        """Reset error report.
-        """
+        """Reset error report."""
         self.last_error_message = ""

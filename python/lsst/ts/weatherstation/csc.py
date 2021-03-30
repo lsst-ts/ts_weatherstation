@@ -66,7 +66,11 @@ class CSC(ConfigurableCsc):
     version = __version__
 
     def __init__(
-        self, index, config_dir=None, initial_state=State.STANDBY, simulation_mode=0,
+        self,
+        index,
+        config_dir=None,
+        initial_state=State.STANDBY,
+        simulation_mode=0,
     ):
         """
         Initialize CSC.
@@ -157,7 +161,7 @@ class CSC(ConfigurableCsc):
         self.cmd_enable.ack_in_progress(id_data, timeout=60)
 
     async def end_disable(self, id_data):
-        """ After switching from enable to disable, wait for telemetry loop to
+        """After switching from enable to disable, wait for telemetry loop to
         finish. If it takes longer then a timeout to finish, cancel the future.
 
         Parameters
