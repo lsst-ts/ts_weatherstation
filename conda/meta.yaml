@@ -24,7 +24,6 @@ test:
         - ts-dds
         - ts-idl {{ idl_version }}
         - ts-salobj {{ salobj_version }}
-        - black
     source_files:
         - python
         - bin
