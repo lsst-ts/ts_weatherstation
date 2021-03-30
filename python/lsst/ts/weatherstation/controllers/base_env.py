@@ -88,6 +88,5 @@ class BaseEnv(abc.ABC):
 
     @abc.abstractmethod
     def reset_error(self):
-        """Reset error report.
-        """
+        """Reset error report."""
         raise NotImplementedError()

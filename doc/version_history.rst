@@ -6,16 +6,27 @@
 Version History
 ###############
 
+v1.4.0
+======
+
+Upgraded black to version 20 and ts-conda-build to 0.3
+
+Requires:
+
+* ts_salobj 6.3
+* ts_idl 3.1
+* IDL file for WeatherStation from ts_xml 8.0
+
 v1.3.0
 ======
 
-This version is an fully working CSC.
+This version is a fully working CSC.
 
 Requires:
 
 * ts_salobj 6.3
 * ts_idl 3.0
-* IDL file for Dome from ts_xml 8.0
+* IDL file for WeatherStation from ts_xml 8.0
 
 v1.2.0
 ======
