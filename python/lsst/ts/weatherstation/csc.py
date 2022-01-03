@@ -23,7 +23,6 @@
 
 import asyncio
 import traceback
-import logging
 
 from .config_schema import CONFIG_SCHEMA
 from . import __version__
@@ -120,14 +119,14 @@ class CSC(ConfigurableCsc):
         """
         try:
             await self.model.controller.start()
-        except Exception as e:
-            self.evt_errorCode.set_put(
-                errorCode=CONTROLLER_START_ERROR,
-                errorReport="Error starting model controller.",
+        except Exception:
+            error_msg = "Error starting model controller."
+            self.log.exception(error_msg)
+            self.fault(
+                code=CONTROLLER_START_ERROR,
+                report=error_msg,
                 traceback=traceback.format_exc(),
             )
-            self.log.exception(e)
-            self.fault()
             raise
         self.telemetry_loop_task = asyncio.ensure_future(self.telemetry_loop())
 
@@ -148,14 +147,14 @@ class CSC(ConfigurableCsc):
         self.telemetry_loop_running = False
         try:
             self.model.controller.stop()
-        except Exception as e:
-            self.evt_errorCode.set_put(
-                errorCode=CONTROLLER_STOP_ERROR,
-                errorReport="Error stopping model controller.",
+        except Exception:
+            error_msg = "Error stopping model controller."
+            self.log.exception(error_msg)
+            self.fault(
+                code=CONTROLLER_STOP_ERROR,
+                report=error_msg,
                 traceback=traceback.format_exc(),
             )
-            self.log.exception(e)
-            self.fault()
 
         await super().begin_disable(id_data)
         self.cmd_enable.ack_in_progress(id_data, timeout=60)
@@ -173,7 +172,7 @@ class CSC(ConfigurableCsc):
 
         await super().end_disable(id_data)
 
-    def fault(self, code=None, report="", trace_back=""):
+    def fault(self, code=None, report="", traceback=""):
         """Enter the fault state.
 
         Subclass parent method to disable corrections in the wait to FAULT
@@ -186,7 +185,7 @@ class CSC(ConfigurableCsc):
             is not output and you should output it yourself.
         report : `str` (optional)
             Description of the error.
-        trace_back : `str`, optional
+        traceback : `str`, optional
             Description of the traceback, if any.
         """
 
@@ -196,15 +195,8 @@ class CSC(ConfigurableCsc):
         except Exception as e:
             self.log.error("Exception trying to stop model controller.")
             self.log.exception(e)
-
-        # Logging error report from the controller
-        self.log.error(
-            "Error report from controller: \n [START]"
-            f"{self.model.controller.error_report()!r} \n [END]"
-        )
         self.model.controller.reset_error()
-
-        super().fault(code=code, report=report)
+        super().fault(code=code, report=report, traceback=traceback)
 
     @staticmethod
     def get_config_pkg():
@@ -236,8 +228,8 @@ class CSC(ConfigurableCsc):
             raise RuntimeError("Telemetry loop still running...")
         self.telemetry_loop_running = True
 
-        while self.telemetry_loop_running:
-            try:
+        try:
+            while self.telemetry_loop_running:
                 self.log.debug("Getting data...")
                 weather_data = await self.model.get_weatherstation_data()
 
@@ -250,23 +242,17 @@ class CSC(ConfigurableCsc):
                         telemetry = getattr(self, f"tel_{topic_name}", None)
                         if telemetry is not None:
                             telemetry.set_put(**weather_data[topic_name])
-            except Exception as e:
-                # If there is an exception go to FAULT state, log the exception and break the loop
-                error_topic = self.evt_errorCode.DataType()
-                error_topic.errorCode = TELEMETRY_LOOP_ERROR
-                error_topic.errorReport = "Error in the telemetry loop coroutine."
-                error_topic.traceback = traceback.format_exc()
-                self.evt_errorCode.put(error_topic)
-                self.log.exception(e)
-                self.fault()
-                self.model.controller.stop()
-                break
-
-        self.evt_logMessage.set_put(
-            level=logging.ERROR,
-            message="Telemetry loop dying.",
-            traceback=traceback.format_exc(),
-        )
+        except Exception:
+            # If there is an exception go to FAULT state, log the exception and break the loop
+            error_msg = "Error in the telemetry loop."
+            self.log.exception(error_msg)
+            self.fault(
+                code=TELEMETRY_LOOP_ERROR,
+                report=error_msg,
+                traceback=traceback.format_exc(),
+            )
+        finally:
+            self.telemetry_loop_running = False
 
     async def wait_loop(self, loop):
         """A utility method to wait for a task to die or cancel it and handle
