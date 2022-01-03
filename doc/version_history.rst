@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v1.4.1
+======
+
+Simplify fault handling.
+Configure pytest to check black formatting.
+
+Requires:
+
+* ts_salobj 6.3
+* ts_idl 3.1
+* IDL file for WeatherStation from ts_xml 8.0
+
 v1.4.0
 ======
 
