@@ -103,7 +103,7 @@ class CSC(ConfigurableCsc):
 
         """
         await super().begin_enable(id_data)
-        self.cmd_enable.ack_in_progress(id_data, timeout=60)
+        await self.cmd_enable.ack_in_progress(id_data, timeout=60)
 
     async def end_enable(self, id_data):
         """End do_enable; called after state changes
@@ -122,7 +122,7 @@ class CSC(ConfigurableCsc):
         except Exception:
             error_msg = "Error starting model controller."
             self.log.exception(error_msg)
-            self.fault(
+            await self.fault(
                 code=CONTROLLER_START_ERROR,
                 report=error_msg,
                 traceback=traceback.format_exc(),
@@ -150,14 +150,14 @@ class CSC(ConfigurableCsc):
         except Exception:
             error_msg = "Error stopping model controller."
             self.log.exception(error_msg)
-            self.fault(
+            await self.fault(
                 code=CONTROLLER_STOP_ERROR,
                 report=error_msg,
                 traceback=traceback.format_exc(),
             )
 
         await super().begin_disable(id_data)
-        self.cmd_enable.ack_in_progress(id_data, timeout=60)
+        await self.cmd_enable.ack_in_progress(id_data, timeout=60)
 
     async def end_disable(self, id_data):
         """After switching from enable to disable, wait for telemetry loop to
@@ -172,7 +172,7 @@ class CSC(ConfigurableCsc):
 
         await super().end_disable(id_data)
 
-    def fault(self, code=None, report="", traceback=""):
+    async def fault(self, code=None, report="", traceback=""):
         """Enter the fault state.
 
         Subclass parent method to disable corrections in the wait to FAULT
@@ -196,7 +196,7 @@ class CSC(ConfigurableCsc):
             self.log.error("Exception trying to stop model controller.")
             self.log.exception(e)
         self.model.controller.reset_error()
-        super().fault(code=code, report=report, traceback=traceback)
+        await super().fault(code=code, report=report, traceback=traceback)
 
     @staticmethod
     def get_config_pkg():
@@ -241,12 +241,12 @@ class CSC(ConfigurableCsc):
                     for topic_name in weather_data:
                         telemetry = getattr(self, f"tel_{topic_name}", None)
                         if telemetry is not None:
-                            telemetry.set_put(**weather_data[topic_name])
+                            await telemetry.set_write(**weather_data[topic_name])
         except Exception:
             # If there is an exception go to FAULT state, log the exception and break the loop
             error_msg = "Error in the telemetry loop."
             self.log.exception(error_msg)
-            self.fault(
+            await self.fault(
                 code=TELEMETRY_LOOP_ERROR,
                 report=error_msg,
                 traceback=traceback.format_exc(),

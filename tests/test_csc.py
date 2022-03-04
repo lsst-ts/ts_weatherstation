@@ -23,11 +23,11 @@
 
 import unittest
 
-from lsst.ts import salobj
+from lsst.ts import salobj, utils
 
 from lsst.ts.weatherstation import csc
 
-index_gen = salobj.index_generator()
+index_gen = utils.index_generator()
 
 
 class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):

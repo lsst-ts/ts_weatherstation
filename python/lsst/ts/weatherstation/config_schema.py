@@ -28,8 +28,8 @@ import yaml
 CONFIG_SCHEMA = yaml.safe_load(
     """
     $schema: http://json-schema.org/draft-07/schema#
-    $id: https://github.com/lsst-ts/ts_weatherstation/blob/master/python/lsst/ts/weatherstation/config_schema.py  # noqa
-    title: WeatherStation v1
+    $id: https://github.com/lsst-ts/ts_weatherstation/blob/main/python/lsst/ts/weatherstation/config_schema.py  # noqa
+    title: WeatherStation v2
     description: Schema for the WeatherStation CSC configuration files
     type: object
     properties:
@@ -38,7 +38,6 @@ CONFIG_SCHEMA = yaml.safe_load(
         type: string
         enum:
         - lsst
-        default: lsst
     allOf:
     # For each supported weather station controller add a new if/then case below.
     # Warning: set the default values for each case at the model level
@@ -52,15 +51,11 @@ CONFIG_SCHEMA = yaml.safe_load(
         properties:
           host:
             type: string
-            default: 'localhost'
           port:
             type: number
-            default: 50000
           buffer_size:
             type: number
-            default: 2048
           timeout:
             type: number
-            default: 120.
     """
 )
