@@ -15,7 +15,7 @@ Requires:
 
 * ts_salobj 7.0
 * ts_idl 3.1
-* IDL file for WeatherStation from ts_xml 8.0
+* IDL file for WeatherStation from ts_xml 11.0
 
 v1.4.1
 ======

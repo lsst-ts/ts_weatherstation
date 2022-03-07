@@ -216,7 +216,12 @@ class CSC(ConfigurableCsc):
         Called when running the ``start`` command, just before changing
         summary state from `State.STANDBY` to `State.DISABLED`.
         """
-        self.model.setup(config, simulation_mode=self.simulation_mode)
+        for instance in config.instances:
+            if instance["sal_index"] == self.salinfo.index:
+                break
+        else:
+            raise RuntimeError(f"No config found for sal_index={self.salinfo.index}")
+        self.model.setup(instance, simulation_mode=self.simulation_mode)
 
     async def telemetry_loop(self):
         """Telemetry loop coroutine. This method should only be running if the

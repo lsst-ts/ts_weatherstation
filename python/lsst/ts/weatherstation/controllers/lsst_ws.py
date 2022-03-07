@@ -28,6 +28,7 @@ import numpy as np
 import socket
 
 from astropy.io import ascii
+import yaml
 
 from .base_env import BaseEnv
 
@@ -354,6 +355,24 @@ SNH|MIN|PT24H||1|cm|:11873.7)D621
         self.buffer_size = config.buffer_size
         self.timeout = config.timeout
         self.simulation = simulation
+
+    def get_config_schema(self):
+        return yaml.safe_load(
+            """
+$schema: http://json-schema.org/draft-07/schema#
+description: Schema for RPiDataClient
+type: object
+properties:
+  host:
+    type: string
+  port:
+    type: number
+  buffer_size:
+    type: number
+  timeout:
+    type: number
+"""
+        )
 
     def unset(self):
         """Unset weather station."""
