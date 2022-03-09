@@ -81,8 +81,6 @@ class Model:
         config_schema = self.controller.get_config_schema()
         validator = salobj.DefaultingValidator(config_schema)
         config_dict = validator.validate(config)
-        if not isinstance(config_dict, dict):
-            raise RuntimeError(f"config {config!r} invalid: not a dict")
         controller_config = types.SimpleNamespace(**config_dict)
         self.controller.setup(controller_config, simulation=simulation_mode)
 

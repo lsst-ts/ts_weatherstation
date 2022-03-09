@@ -365,12 +365,16 @@ type: object
 properties:
   host:
     type: string
+    default: "loaclhost"
   port:
     type: number
+    default: 50000
   buffer_size:
     type: number
+    default: 2048
   timeout:
     type: number
+    default: 120.0
 """
         )
 

@@ -27,13 +27,15 @@ import unittest
 from lsst.ts import salobj
 from lsst.ts.weatherstation import csc
 
-TEST_CONFIG_DIR = pathlib.Path(__file__).parents[1].joinpath("tests", "data", "config")
+TEST_CONFIG_DIR = pathlib.Path(__file__).parent / "data" / "config"
 
 
 class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
-    def basic_make_csc(self, initial_state, config_dir, simulation_mode, **kwargs):
+    def basic_make_csc(
+        self, index, initial_state, config_dir, simulation_mode, **kwargs
+    ):
         return csc.CSC(
-            index=1,
+            index=index,
             initial_state=initial_state,
             config_dir=config_dir,
             simulation_mode=simulation_mode,
@@ -41,6 +43,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
 
     async def test_standard_state_transitions(self):
         async with self.make_csc(
+            index=1,
             initial_state=salobj.State.STANDBY,
             config_dir=TEST_CONFIG_DIR,
             simulation_mode=1,
@@ -51,6 +54,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
 
     async def test_version(self):
         async with self.make_csc(
+            index=1,
             initial_state=salobj.State.STANDBY,
             config_dir=TEST_CONFIG_DIR,
             simulation_mode=1,
