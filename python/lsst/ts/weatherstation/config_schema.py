@@ -27,40 +27,30 @@ import yaml
 
 CONFIG_SCHEMA = yaml.safe_load(
     """
-    $schema: http://json-schema.org/draft-07/schema#
-    $id: https://github.com/lsst-ts/ts_weatherstation/blob/master/python/lsst/ts/weatherstation/config_schema.py  # noqa
-    title: WeatherStation v1
-    description: Schema for the WeatherStation CSC configuration files
-    type: object
-    properties:
-      type:
-        description: Type of weather station controller.
-        type: string
-        enum:
-        - lsst
-        default: lsst
-    allOf:
-    # For each supported weather station controller add a new if/then case below.
-    # Warning: set the default values for each case at the model level
-    # (rather than deeper down on properties within camera),
-    # so users can omit controller and still get proper defaults.
-    - if:
+  $schema: http://json-schema.org/draft-07/schema#
+  $id: https://github.com/lsst-ts/ts_weatherstation/blob/main/python/lsst/ts/weatherstation/config_schema.py  # noqa
+  title: WeatherStation v2
+  description: Schema for the WeatherStation CSC configuration files
+  type: object
+  properties:
+    instances:
+      type: array
+      description: Configuration for each WeatherStation instance.
+      minItem: 1
+      items:
+        type: object
         properties:
-          type:
-            const: lsst
-      then:
-        properties:
-          host:
+          sal_index:
+            type: integer
+            description: SAL index of WeatherStation instance.
+            minimum: 1
+          ws_type:
+            description: Type of WeatherStation model.
             type: string
-            default: 'localhost'
-          port:
-            type: number
-            default: 50000
-          buffer_size:
-            type: number
-            default: 2048
-          timeout:
-            type: number
-            default: 120.
+            enum:
+            - lsst
+          config:
+            description: Configuration for the WeatherStation model.
+            type: object
     """
 )

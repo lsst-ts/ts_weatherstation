@@ -50,6 +50,17 @@ class BaseEnv(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
+    def get_config_schema(self):
+        """Get the configuration schema for this Environment Controller.
+
+        Returns
+        -------
+        `dict`
+            The configuration schema in yaml format.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def unset(self):
         """Unset weather station."""
         raise NotImplementedError()
