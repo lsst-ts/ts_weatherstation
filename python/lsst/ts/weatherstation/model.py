@@ -25,8 +25,10 @@ __all__ = ["Model"]
 
 
 import logging
+import types
 
 from lsst.ts.weatherstation import controllers
+from lsst.ts import salobj
 
 available_controllers = {"lsst": controllers.LSSTWeatherStation}
 
@@ -74,8 +76,13 @@ class Model:
             self.log.warning("Controller already set. Unsetting.")
             self.unset_controller()
 
-        self.controller = available_controllers[setting.type]()
-        self.controller.setup(setting, simulation=simulation_mode)
+        self.controller = available_controllers[setting["ws_type"]]()
+        config = setting["config"]
+        config_schema = self.controller.get_config_schema()
+        validator = salobj.DefaultingValidator(config_schema)
+        config_dict = validator.validate(config)
+        controller_config = types.SimpleNamespace(**config_dict)
+        self.controller.setup(controller_config, simulation=simulation_mode)
 
     def unset_controller(self):
         """Unset controller. This will call unset method on controller and make

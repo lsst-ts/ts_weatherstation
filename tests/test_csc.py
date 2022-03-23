@@ -21,19 +21,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import pathlib
 import unittest
 
 from lsst.ts import salobj
-
 from lsst.ts.weatherstation import csc
 
-index_gen = salobj.index_generator()
+TEST_CONFIG_DIR = pathlib.Path(__file__).parent / "data" / "config"
 
 
 class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
-    def basic_make_csc(self, initial_state, config_dir, simulation_mode, **kwargs):
+    def basic_make_csc(
+        self, index, initial_state, config_dir, simulation_mode, **kwargs
+    ):
         return csc.CSC(
-            index=next(index_gen),
+            index=index,
             initial_state=initial_state,
             config_dir=config_dir,
             simulation_mode=simulation_mode,
@@ -41,7 +43,10 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
 
     async def test_standard_state_transitions(self):
         async with self.make_csc(
-            initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1
+            index=1,
+            initial_state=salobj.State.STANDBY,
+            config_dir=TEST_CONFIG_DIR,
+            simulation_mode=1,
         ):
             await self.check_standard_state_transitions(
                 enabled_commands=(),
@@ -49,7 +54,10 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
 
     async def test_version(self):
         async with self.make_csc(
-            initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1
+            index=1,
+            initial_state=salobj.State.STANDBY,
+            config_dir=TEST_CONFIG_DIR,
+            simulation_mode=1,
         ):
             await self.assert_next_sample(
                 self.remote.evt_softwareVersions,
@@ -60,6 +68,6 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
     async def test_bin_script(self):
         await self.check_bin_script(
             name="WeatherStation",
-            index=next(index_gen),
+            index=1,
             exe_name="weatherstation_csc.py",
         )
