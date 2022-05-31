@@ -29,10 +29,11 @@ __all__ = ["BaseEnv"]
 class BaseEnv(abc.ABC):
     """Base class for Environment controllers.
 
-    This class defines the minimum set of methods required to connect to a weather station and get data
-    from it in the context of the LSST CSC environment. When developing a controller for a CSC, one
-    should subclass this method and overwrite the methods as required to setup and operate the weather
-    station.
+    This class defines the minimum set of methods required to connect to a
+    weather station and get data from it in the context of the LSST CSC
+    environment. When developing a controller for a CSC, one should subclass
+    this method and overwrite the methods as required to setup and operate
+    the weather station.
     """
 
     @abc.abstractmethod
@@ -82,7 +83,8 @@ class BaseEnv(abc.ABC):
         Returns
         -------
         measurement : dict
-            A dictionary with the same values of the dimmMeasurement topic SAL Event.
+            A dictionary with the same values of the dimmMeasurement topic SAL
+            Event.
         """
         raise NotImplementedError()
 
