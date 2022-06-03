@@ -69,5 +69,5 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         await self.check_bin_script(
             name="WeatherStation",
             index=1,
-            exe_name="weatherstation_csc.py",
+            exe_name="weatherstation_csc",
         )

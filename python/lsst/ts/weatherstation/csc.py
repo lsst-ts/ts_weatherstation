@@ -248,7 +248,8 @@ class CSC(ConfigurableCsc):
                         if telemetry is not None:
                             await telemetry.set_write(**weather_data[topic_name])
         except Exception:
-            # If there is an exception go to FAULT state, log the exception and break the loop
+            # If there is an exception go to FAULT state, log the exception and
+            # break the loop
             error_msg = "Error in the telemetry loop."
             self.log.exception(error_msg)
             await self.fault(
@@ -282,6 +283,6 @@ class CSC(ConfigurableCsc):
         except asyncio.CancelledError:
             self.log.info("Loop cancelled...")
         except Exception as e:
-            # Something else may have happened. I still want to disable as this will stop the loop on the
-            # target production
+            # Something else may have happened. I still want to disable as this
+            # will stop the loop on the target production
             self.log.exception(e)

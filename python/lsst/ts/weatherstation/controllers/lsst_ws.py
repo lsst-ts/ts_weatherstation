@@ -61,7 +61,8 @@ def fix_data(val):
 
 
 async def get_last_item(idict, items):
-    """A recursive method to get the last item from a list of items in a nested dictionary.
+    """A recursive method to get the last item from a list of items in a nested
+    dictionary.
 
     For example, consider the following nested dictionary:
     my_dict = {'level1' : {'level2_1': 21, 'level2_2': 22}}
@@ -75,7 +76,8 @@ async def get_last_item(idict, items):
     idict : dict
         Nested dictionary.
     items : list(str)
-        A list of keys, each item represents a level inside the nested dictionary.
+        A list of keys, each item represents a level inside the nested
+        dictionary.
 
     Returns
     -------
@@ -411,20 +413,24 @@ properties:
                 self.socket = None
 
     async def parse_data(self, data_str):
-        """A utility method to get a data string from the weather station and parse its content into
-        `self.data_structure`. It uses `astropy.io.ascii` to parse the input string into a table and
-        then loop through the data structure filling it out.
+        """A utility method to get a data string from the weather station and
+        parse its content into `self.data_structure`. It uses
+        `astropy.io.ascii` to parse the input string into a table and then loop
+        through the data structure filling it out.
 
         Parameters
         ----------
         data_str : str
-            A string containing the data from the weather station. Its format must match the internal
-            definition, that can be found at `self.data_str`.
+            A string containing the data from the weather station. Its format
+            must match the internal definition, that can be found at
+            `self.data_str`.
 
         """
 
-        # Read the header information, that contains date, time and other useful information.
-        # header = ascii.read(data_str, data_start=1, data_end=8, delimiter=':')
+        # Read the header information, that contains date, time and other
+        # useful information.
+        # header =
+        #   ascii.read(data_str, data_start=1, data_end=8, delimiter=':')
         # Read the data into a table
         try:
             data = ascii.read(data_str, data_start=9)
@@ -484,13 +490,14 @@ properties:
             await asyncio.sleep(0.0)  # give control back to event loop
 
     async def get_topic_dict(self):
-        """Parse the data from `self.data_structure` into a dictionary with `self.data_mapping` structure.
+        """Parse the data from `self.data_structure` into a dictionary with
+        `self.data_mapping` structure.
 
         Returns
         -------
         topic_dict : dict
-            A dictionary with the same structure of `self.data_mapping` but filled with the data from
-            `self.data_structure`.
+            A dictionary with the same structure of `self.data_mapping` but
+            filled with the data from `self.data_structure`.
 
         """
         topic_dict = copy.deepcopy(self.data_mapping)
@@ -565,7 +572,8 @@ properties:
         Returns
         -------
         measurement : dict
-            A dictionary with the same values of the dimmMeasurement topic SAL Event.
+            A dictionary with the same values of the dimmMeasurement topic SAL
+            Event.
         """
         if self.simulation:
             # Running in simulation, use the internal data string

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # This file is part of ts_weatherstation.
 #
 # Developed for the Vera Rubin Observatory Telescope and Site Systems.
@@ -21,8 +19,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+__all__ = ["execute_csc"]
+
 import asyncio
 
-from lsst.ts.weatherstation.csc import CSC
+from .csc import CSC
 
-asyncio.run(CSC.amain(index=True))
+
+def execute_csc():
+    asyncio.run(CSC.amain(index=True))
