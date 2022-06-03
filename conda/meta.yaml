@@ -13,12 +13,10 @@ build:
         - weatherstation_csc = lsst.ts.weatherstation.cli:execute_csc
     script_env:
         - PATH
-        - PYTHONPATH
         - LD_LIBRARY_PATH
         - OSPL_HOME
-        - PYTHON_BUILD_VERSION
         - PYTHON_BUILD_LOCATION
-        - LSST_DDS_DOMAIN
+        - LSST_DDS_PARTITION_PREFIX
         - TS_CONFIG_OCS_DIR
 
 test:
