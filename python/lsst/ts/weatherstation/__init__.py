@@ -26,5 +26,6 @@ try:
 except ModuleNotFoundError:
     __version__ = "?"
 
+from .cli import *
 from .config_schema import CONFIG_SCHEMA
 from .csc import *
