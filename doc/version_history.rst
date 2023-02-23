@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v1.6.1
+======
+
+* Modernize pre-commit config versions.
+* Format source files with black 23.
+
+Requires:
+
+* ts_salobj 7.0
+* ts_idl 3.1
+* IDL file for WeatherStation from ts_xml 11.0
+
 v1.6.0
 ======
 
