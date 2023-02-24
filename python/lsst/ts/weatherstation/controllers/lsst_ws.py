@@ -99,7 +99,6 @@ class LSSTWeatherStation(BaseEnv):
     """Implement controller for the LSST Weather Station."""
 
     def __init__(self):
-
         # Parameters for this controller
         self.host = ""
         self.port = 0
@@ -542,7 +541,6 @@ properties:
 
         i = 0
         while True:
-
             char = await self.reader.read(1)
             char = char.decode()
             i += 1
