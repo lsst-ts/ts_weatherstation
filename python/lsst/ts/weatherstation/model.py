@@ -39,7 +39,6 @@ class Model:
     """
 
     def __init__(self):
-
         self.log = logging.getLogger(__name__)
 
         # List of weather topics to publish
